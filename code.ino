@@ -1,6 +1,7 @@
 //LCD config
 //Include the library code:
 #include <LiquidCrystal.h>
+#include <AccelStepper.h>
 
 #define STEPPER1EN    38
 #define STEPPER1STEP  A0
@@ -13,6 +14,12 @@
 #define STEPPER3EN    A8
 #define STEPPER3STEP  46
 #define STEPPER3DIR   48
+
+#define motorInterfaceType 1
+
+AccelStepper Stepper1(motorInterfaceType, STEPPER1STEP, STEPPER1DIR);
+AccelStepper Stepper2(motorInterfaceType, STEPPER2STEP, STEPPER2DIR);
+AccelStepper Stepper3(motorInterfaceType, STEPPER3STEP, STEPPER3DIR);
 
 #define ENCODERSW     35     // Rotary encoder switch
 #define ENCODERADT    33     // Rotary encoder Pin A/DT
@@ -127,6 +134,23 @@ void setup()
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
+
+  Stepper1.setMaxSpeed(1000);
+  Stepper1.setAcceleration(50);
+  Stepper1.setSpeed(200);
+  Stepper1.moveTo(200);
+
+  Stepper2.setMaxSpeed(1000);
+  Stepper2.setAcceleration(50);
+  Stepper2.setSpeed(200);
+  Stepper2.moveTo(200);
+
+  Stepper3.setMaxSpeed(1000);
+  Stepper3.setAcceleration(50);
+  Stepper3.setSpeed(200);
+  Stepper3.moveTo(200);
+
+  
 
   // Attach a CHANGE interrupt to PinB and exectute the update function when this change occurs.
   attachInterrupt(digitalPinToInterrupt(ENCODERBCLK), update, CHANGE); 
