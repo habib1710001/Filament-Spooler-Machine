@@ -1,0 +1,8 @@
+Filament Rewind or Takeup Spooler Machine:
+
+1. MKS GEN 1.4 Mother board
+2. RepRapDisount Smart Controller(20x4 LCD Display, Rotary Encoder, push button)
+3. A4988 Stepper Motor Driver 
+4. NEMA17 Stepper Motor
+5. CNC Sliding TAble Lead Screw
+6. Laser Calibrator
