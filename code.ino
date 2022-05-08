@@ -17,11 +17,11 @@
 
 #define LIMITSWITCH2  2
 
-#define motorInterfaceType 1
+#define MOTOR_INTERFACE_TIME 1
 
-AccelStepper Stepper1(motorInterfaceType, STEPPER1STEP, STEPPER1DIR);
-AccelStepper Stepper2(motorInterfaceType, STEPPER2STEP, STEPPER2DIR);
-AccelStepper Stepper3(motorInterfaceType, STEPPER3STEP, STEPPER3DIR);
+AccelStepper Stepper1(MOTOR_INTERFACE_TIME, STEPPER1STEP, STEPPER1DIR);
+AccelStepper Stepper2(MOTOR_INTERFACE_TIME, STEPPER2STEP, STEPPER2DIR);
+AccelStepper Stepper3(MOTOR_INTERFACE_TIME , STEPPER3STEP, STEPPER3DIR);
 
 #define ENCODERSW     35     // Rotary encoder switch
 #define ENCODERADT    33     // Rotary encoder Pin A/DT
@@ -57,6 +57,7 @@ volatile uint8_t  menu;
 
 uint8_t rightPosition;
 uint8_t leftPosition;
+uint16_t initial_homing = 1;
 
 //For showing the menu properly:
 uint8_t flag1 = 1 ;
@@ -141,8 +142,8 @@ void setup()
 
   pinMode (LIMITSWITCH2 , INPUT);
 
-  Stepper1.setMaxSpeed(1000);
-  Stepper1.setAcceleration(50);
+  Stepper1.setMaxSpeed(100);
+  Stepper1.setAcceleration(100);
   Stepper1.setSpeed(200);
   Stepper1.moveTo(200);
 
@@ -352,10 +353,22 @@ void loop()
      }
       lcd.setCursor(0, 0);
       lcd.print("Setting Ferrari");
-      
       lcd.setCursor(2, 1);
       lcd.print("on Home Position");
 
+      //if limit switch is not activated,run the loop
+      //Serial.println(digitalRead(LIMITSWITCH2));//check the limit switch is activve low or high
+      while(digitalRead(LIMITSWITCH2)){
+        Stepper2.moveTo(initial_homing);
+        Stepper2.run();
+        initial_homing++;
+        delay(5);
+      }
+      
+      Stepper2.setCurrentPosition(0);
+      Stepper2.setMaxSpeed(100);
+      Stepper2.setAcceleration(100);
+      
       flag2 = 1;
       flag5 = 1;
       flag4 = 1;
@@ -411,7 +424,7 @@ void loop()
         lcd.print("Left Position: ");
         
         lcd.setCursor(17, 2);
-        leftPosition = map(count, 0, 200, 0, 100);//200 rpm max speed
+        leftPosition = map(count, 0, 200, 0, 1000);
         //move the stepper motor 2 with this code
         
         //
