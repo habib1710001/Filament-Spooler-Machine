@@ -6,3 +6,4 @@ Filament Rewind or Takeup Spooler Machine:
 4. NEMA17 Stepper Motor
 5. CNC Sliding TAble Lead Screw
 6. Laser Calibrator
+7. Limit Switch

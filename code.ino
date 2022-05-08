@@ -15,6 +15,8 @@
 #define STEPPER3STEP  46
 #define STEPPER3DIR   48
 
+#define LIMITSWITCH2  2
+
 #define motorInterfaceType 1
 
 AccelStepper Stepper1(motorInterfaceType, STEPPER1STEP, STEPPER1DIR);
@@ -136,6 +138,8 @@ void setup()
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
+
+  pinMode (LIMITSWITCH2 , INPUT);
 
   Stepper1.setMaxSpeed(1000);
   Stepper1.setAcceleration(50);
