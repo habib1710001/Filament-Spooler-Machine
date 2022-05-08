@@ -47,13 +47,14 @@ uint8_t pinAStateLast = pinAstateCurrent;      // Last read value of Pin A
 //Menu and submenue variables
 volatile uint8_t  subMenuSet;
 volatile uint8_t  menuSet = 1;
+volatile uint8_t optMenuSet; 
 
 volatile uint8_t  optmenu;
 volatile uint8_t  submenu;
 volatile uint8_t  menu;
 
 uint8_t rightPosition;
-uint8_t leftPosition
+uint8_t leftPosition;
 
 //For showing the menu properly:
 uint8_t flag1 = 1 ;
@@ -61,6 +62,7 @@ uint8_t flag2 = 1 ;
 uint8_t flag3 = 1 ;
 uint8_t flag4 = 1;
 uint8_t flag5 = 1;
+uint8_t flag6 = 1;
 
 uint32_t debouncing_time = 1000;//Debouncing Time in Milliseconds
 volatile uint32_t last_micros;
@@ -85,7 +87,7 @@ void push()
   count = 0; 
   subMenuSet = submenu;
   menuSet = menu;
-  optMenuSet = optmanu;
+  optMenuSet = optmenu;
 }
 
 void update() {
