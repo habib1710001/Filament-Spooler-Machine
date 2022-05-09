@@ -138,7 +138,7 @@ void setup()
 {
   Serial.begin (9600); // Initialise the serial monitor
   
-  // initialize the LCD
+  // Initialize the LCD
   lcd.begin(LCDCOLUMN, LCDROW);
   
   // Turn on the blacklight and print a message.
@@ -158,8 +158,9 @@ void setup()
   
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
+  digitalWrite(ENCODERADT, HIGH); // turn on pullup resistors
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
-
+  digitalWrite(ENCODERBCLK, HIGH); // turn on pullup resistors
   pinMode (LIMITSWITCH2 , INPUT);
 
   Stepper1.setMaxSpeed(100);
@@ -408,7 +409,8 @@ void loop()
       {
        lcd.clear();
        flag6 = 0 ;
-       menu = 1 ; 
+       menu = 1 ;
+       
       }
       lcd.setCursor(0, 0);
       lcd.print("Spool and Ferrari");
@@ -419,7 +421,6 @@ void loop()
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       Stepper1.runSpeed();
       Stepper3.run();
-      
       Stepper2.runSpeed();
       flipCheck();   //checking the flip in each loop
       
