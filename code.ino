@@ -57,7 +57,10 @@ volatile uint8_t  menu;
 
 uint8_t rightPosition;
 uint8_t leftPosition;
-uint16_t initial_homing = 1;
+uint32_t initial_homing = 1;
+uint32_t stepper2PositionLeft;
+uint32_t stepper2PositionRight;
+bool flipState = true;
 
 //For showing the menu properly:
 uint8_t flag1 = 1 ;
@@ -67,7 +70,7 @@ uint8_t flag4 = 1;
 uint8_t flag5 = 1;
 uint8_t flag6 = 1;
 
-uint32_t debouncing_time = 1000;//Debouncing Time in Milliseconds
+uint32_t debouncing_time = 100;//Debouncing Time in Milliseconds
 volatile uint32_t last_micros;
 
 
@@ -112,6 +115,23 @@ void update() {
   pinAStateLast = pinAstateCurrent;        // Store the latest read value in the currect state variable
 }
 
+void flipCheck()
+{    //Serial.println(currentPosition()); //for debugging
+     if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
+        stepper.setSpeed(500);   //positive direction 500 steps per sec     
+     }
+     else {
+      flipState =! flipState;
+     }
+     
+     if((flipState == false) && (Stepper2.currentPosition() > stepper2PositionLeft)) 
+     {  
+       stepper.setSpeed(-500);   //negative direction 500 steps per sec
+     } 
+     else {
+      flipState =! flipState;
+     }   
+}
 
 
 void setup() 
@@ -145,17 +165,14 @@ void setup()
   Stepper1.setMaxSpeed(100);
   Stepper1.setAcceleration(100);
   Stepper1.setSpeed(200);
-  Stepper1.moveTo(200);
 
   Stepper2.setMaxSpeed(1000);
   Stepper2.setAcceleration(50);
   Stepper2.setSpeed(200);
-  Stepper2.moveTo(200);
 
   Stepper3.setMaxSpeed(1000);
   Stepper3.setAcceleration(50);
   Stepper3.setSpeed(200);
-  Stepper3.moveTo(200);
 
   
 
@@ -307,10 +324,11 @@ void loop()
       lcd.print("Puller Speed");
 
       lcd.setCursor(14, 1);
-      uint8_t value = map(count, 0, 200, 0, 100);//200 rpm max speed
-      
+      uint8_t value = map(count, 0, 500, 0, 1000);
       lcd.print(String(value) + "rpm");
       
+      Stepper1.setSpeed(value);
+      Stepper2.setSpeed(value);
       lcd.setCursor(0 ,3);
       lcd.print("Start Spolling?");
 
@@ -332,8 +350,11 @@ void loop()
       lcd.setCursor(0, 0);
       lcd.print("Speed: ");
       
-      uint8_t value = map(count, 0, 200, 0, 100);//200 rpm max speed
+      uint8_t value = map(count, 0, 500, 0, 1000);
+      Stepper1.setSpeed(value);
+      Stepper2.setSpeed(value);
       lcd.print(String(value) + "rpm");
+
       lcd.setCursor(0, 1);
       lcd.print("Set Speed?");
 
@@ -393,10 +414,15 @@ void loop()
       lcd.print("Spool and Ferrari");
       lcd.setCursor(9, 1);
       lcd.print("On");
-
-      /*
-        Stepper motor rotaion code
-       */
+      
+      //Stepper motor rotaion code
+      //step the motor (this will step the motor by 1 step at each loop indefinitely)
+      Stepper1.runSpeed();
+      Stepper3.run();
+      
+      Stepper2.runSpeed();
+      flipCheck();   //checking the flip in each loop
+      
 
       flag3 = 1;
       flag4 = 1;
@@ -424,11 +450,13 @@ void loop()
         lcd.print("Left Position: ");
         
         lcd.setCursor(17, 2);
-        leftPosition = map(count, 0, 200, 0, 1000);
-        //move the stepper motor 2 with this code
         
+        //move the stepper motor 2 towards the left Spool side with this code
+        stepper2PositionLeft = count;
+        Stepper2.moveTo(stepper2PositionLeft);
+        Stepper2.runToNewPosition(stepper2PositionLeft);
         //
-        lcd.print(String(leftPosition));
+        lcd.print(String(stepper2PositionLeft));
        }
       }
       lcd.setCursor(4, 0);
@@ -441,14 +469,17 @@ void loop()
       lcd.print("Right Position: ");
 
       lcd.setCursor(17, 2);
-      rightPosition = map(count, 0, 200, 0, 100);//200 rpm max speed
-      //move the stepper motor 2 with this code
-        
+         
+      //move the stepper motor 2 towards the Right Spool side with this code
+        stepper2PositionRight = count;
+        Stepper2.moveTo(stepper2PositionRight);
+        Stepper2.runToNewPosition(stepper2PositionRight);
       //
-      lcd.print(String(rightPosition));
+        
+      lcd.print(String(stepper2PositionRight));
       
       lcd.setCursor(0 ,3);
-      lcd.print("Press okay");
+      lcd.print("Click to finish");
 
       flag3 = 1;
       flag4 = 1;
