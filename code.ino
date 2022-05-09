@@ -118,7 +118,7 @@ void update() {
 void flipCheck()
 {    //Serial.println(currentPosition()); //for debugging
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
-        stepper.setSpeed(500);   //positive direction 500 steps per sec     
+        Stepper2.setSpeed(500);   //positive direction 500 steps per sec     
      }
      else {
       flipState =! flipState;
@@ -126,7 +126,7 @@ void flipCheck()
      
      if((flipState == false) && (Stepper2.currentPosition() > stepper2PositionLeft)) 
      {  
-       stepper.setSpeed(-500);   //negative direction 500 steps per sec
+       Stepper2.setSpeed(-500);   //negative direction 500 steps per sec
      } 
      else {
       flipState =! flipState;
