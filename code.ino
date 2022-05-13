@@ -41,10 +41,10 @@ AccelStepper Stepper3(MOTOR_INTERFACE_TIME , STEPPER3STEP, STEPPER3DIR);
 LiquidCrystal lcd(LCDRS, LCDEN, LCDD4, LCDD5, LCDD6, LCDD7);
 
 // Rotary Encoder Variables
-uint8_t switchPin = 2;       // button pin
-uint8_t switchState = HIGH; // button value
-uint8_t pinAstateCurrent = LOW;                // Current state of Pin A
-uint8_t pinAStateLast = pinAstateCurrent;      // Last read value of Pin A
+volatile uint8_t switchPin = 2;       // button pin
+volatile uint8_t switchState = HIGH; // button value
+volatile uint8_t pinAstateCurrent = LOW;                // Current state of Pin A
+volatile uint8_t pinAStateLast = pinAstateCurrent;      // Last read value of Pin A
 
 //Menu and submenue variables
 volatile uint8_t  subMenuSet;
@@ -60,6 +60,7 @@ uint8_t leftPosition;
 uint32_t initial_homing = 1;
 uint32_t stepper2PositionLeft;
 uint32_t stepper2PositionRight;
+uint32_t lastButtonPress = 0 ;
 bool flipState = true;
 
 //For showing the menu properly:
@@ -81,19 +82,26 @@ volatile uint16_t count = 0;
 //Vectors for musical note, arrow, speaker , battery level
 uint8_t arrow[8] = {0x0, 0x04 ,0x06, 0x1f, 0x06, 0x04, 0x00, 0x00};
 
-void debounceInterrupt() {
-  if((long)(micros() - last_micros) >= debouncing_time * 1000) {
-    push();
-    last_micros = micros();
-  }
-}
 
 void push()
-{
-  count = 0; 
-  subMenuSet = submenu;
-  menuSet = menu;
-  optMenuSet = optmenu;
+{ 
+  // Read the button state
+  volatile uint8_t btnState = digitalRead(ENCODERSW);
+  
+  //If we detect LOW signal, button is pressed
+  if (btnState == LOW){
+    //if 50ms have passed since last LOW pulse, it means that the
+    //button has been pressed, released and pressed again
+    if (millis() - lastButtonPress > 50){
+      Serial.println("Button pressed!"); //for debugging only
+      count = 0; 
+      subMenuSet = submenu;
+      menuSet = menu;
+      optMenuSet = optmenu;
+    }
+    // Remember last button press event
+    lastButtonPress = millis();
+  }
 }
 
 void update() {
@@ -158,30 +166,28 @@ void setup()
   
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
-  digitalWrite(ENCODERADT, HIGH); // turn on pullup resistors
+  //digitalWrite(ENCODERADT, HIGH); // turn on pullup resistors
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
-  digitalWrite(ENCODERBCLK, HIGH); // turn on pullup resistors
+  //digitalWrite(ENCODERBCLK, HIGH); // turn on pullup resistors
   pinMode (LIMITSWITCH2 , INPUT);
 
   Stepper1.setMaxSpeed(100);
   Stepper1.setAcceleration(100);
   Stepper1.setSpeed(200);
 
-  Stepper2.setMaxSpeed(1000);
+  Stepper2.setMaxSpeed(100);
   Stepper2.setAcceleration(50);
   Stepper2.setSpeed(200);
 
-  Stepper3.setMaxSpeed(1000);
+  Stepper3.setMaxSpeed(100);
   Stepper3.setAcceleration(50);
   Stepper3.setSpeed(200);
 
   
-
-  // Attach a CHANGE interrupt to PinB and exectute the update function when this change occurs.
-  attachInterrupt(digitalPinToInterrupt(ENCODERBCLK), update, CHANGE); 
-  attachInterrupt(digitalPinToInterrupt(ENCODERSW), debounceInterrupt , FALLING);
-  
   menuSet = 1; //default page selection initialization.
+
+  // Read the initial state of CLK
+  pinAStateLast = digitalRead(ENCODERBCLK);
 }
 
 void loop() 
@@ -197,6 +203,12 @@ void loop()
         flag1 = 0;
         lcd.clear();
       }
+
+      //Response from the encoder
+      update();
+      push();
+      delay(10);
+      
       lcd.setCursor(0, 0);
       lcd.write(byte(0)); 
       lcd.setCursor(1,0);
@@ -220,6 +232,12 @@ void loop()
         flag2 = 0;
         lcd.clear();
       }
+
+      //Response from the encoder
+      update();
+      push();
+      delay(10);
+      
       lcd.setCursor(1,0);
       lcd.print("Info Screen");
       lcd.setCursor(0, 1);
@@ -243,6 +261,12 @@ void loop()
         flag3 = 0;
         lcd.clear();
      }
+
+     //Response from the encoder
+     update();
+     push();
+     delay(10);
+     
      lcd.setCursor(1,0);
      lcd.print("Info Screen");
      lcd.setCursor(1 ,1);
@@ -267,6 +291,11 @@ void loop()
         flag4 = 0;
         lcd.clear();
      }
+     //Response from the encoder
+     update();
+     push();
+     delay(10);
+     
      lcd.setCursor(1,0);
      lcd.print("Info Screen");
      lcd.setCursor(1 ,1);
@@ -299,6 +328,11 @@ void loop()
        flag5 = 0 ;
        menu = 1 ; 
       }
+      //Response from the encoder
+      update();
+      push();
+      delay(10);
+      
       lcd.setCursor(0, 0);
       lcd.print("Filament Spooler");
       lcd.setCursor(5, 1);
@@ -325,6 +359,11 @@ void loop()
       lcd.print("Puller Speed");
 
       lcd.setCursor(14, 1);
+      //Response from the encoder
+      push();
+      update();
+      delay(10);
+      
       uint8_t value = map(count, 0, 500, 0, 1000);
       lcd.print(String(value) + "rpm");
       
@@ -350,7 +389,12 @@ void loop()
      
       lcd.setCursor(0, 0);
       lcd.print("Speed: ");
-      
+
+      //Response from the encoder
+      push();
+      update();
+      delay(10);
+   
       uint8_t value = map(count, 0, 500, 0, 1000);
       Stepper1.setSpeed(value);
       Stepper2.setSpeed(value);
@@ -373,6 +417,12 @@ void loop()
        flag3 = 0 ;
        menu = 3; 
      }
+
+      //Response from the encoder
+      push();
+      update();
+      delay(10);
+      
       lcd.setCursor(0, 0);
       lcd.print("Setting Ferrari");
       lcd.setCursor(2, 1);
@@ -419,6 +469,11 @@ void loop()
       
       //Stepper motor rotaion code
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
+      //Response from the encoder
+      push();
+      update();
+      delay(10);
+      
       Stepper1.runSpeed();
       Stepper3.run();
       Stepper2.runSpeed();
@@ -451,6 +506,11 @@ void loop()
         lcd.print("Left Position: ");
         
         lcd.setCursor(17, 2);
+
+        //Response from the encoder
+        push();
+        update();
+        delay(10);
         
         //move the stepper motor 2 towards the left Spool side with this code
         stepper2PositionLeft = count;
@@ -470,6 +530,11 @@ void loop()
       lcd.print("Right Position: ");
 
       lcd.setCursor(17, 2);
+
+      //Response from the encoder
+       push();
+       update();
+       delay(10);
          
       //move the stepper motor 2 towards the Right Spool side with this code
         stepper2PositionRight = count;
