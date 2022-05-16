@@ -24,8 +24,9 @@ AccelStepper Stepper2(MOTOR_INTERFACE_TIME, STEPPER2STEP, STEPPER2DIR);
 AccelStepper Stepper3(MOTOR_INTERFACE_TIME , STEPPER3STEP, STEPPER3DIR);
 
 #define ENCODERSW     35     // Rotary encoder switch
-#define ENCODERADT    33     // Rotary encoder Pin A/DT
 #define ENCODERBCLK   31     // Rotary encoder Pin B/CLK
+#define ENCODERADT    33     // Rotary encoder Pin A/DT
+
 
 #define LCDRS 16
 #define LCDEN 17
@@ -43,8 +44,8 @@ LiquidCrystal lcd(LCDRS, LCDEN, LCDD4, LCDD5, LCDD6, LCDD7);
 // Rotary Encoder Variables
 volatile uint8_t switchPin = 2;       // button pin
 volatile uint8_t switchState = HIGH; // button value
-volatile uint8_t pinAstateCurrent = LOW;                // Current state of Pin A
-volatile uint8_t pinAStateLast = pinAstateCurrent;      // Last read value of Pin A
+volatile uint8_t pinAstateCurrent ;                // Current state of Pin A
+volatile uint8_t pinAStateLast;      // Last read value of Pin A
 
 //Menu and submenue variables
 volatile uint8_t  subMenuSet;
@@ -111,15 +112,16 @@ void update() {
   // If there is a minimal movement of 1 step
   if ((pinAStateLast == LOW) && (pinAstateCurrent == HIGH)) 
   {
-    if (digitalRead(ENCODERBCLK) == HIGH) 
+    if (digitalRead(ENCODERBCLK) == LOW) 
      {
-      count--;
+      count++;
      } 
     else 
-      {
-      count++;
+     {
+      count--;
      }  
   }
+  Serial.println(count);
   pinAStateLast = pinAstateCurrent;        // Store the latest read value in the currect state variable
 }
 
@@ -166,9 +168,10 @@ void setup()
   
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
-  //digitalWrite(ENCODERADT, HIGH); // turn on pullup resistors
+  digitalWrite(ENCODERADT, HIGH);                 // turn on pullup resistors
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
-  //digitalWrite(ENCODERBCLK, HIGH); // turn on pullup resistors
+  digitalWrite(ENCODERBCLK, HIGH);                // turn on pullup resistors
+  
   pinMode (LIMITSWITCH2 , INPUT);
 
   Stepper1.setMaxSpeed(100);
@@ -183,7 +186,6 @@ void setup()
   Stepper3.setAcceleration(50);
   Stepper3.setSpeed(200);
 
-  
   menuSet = 1; //default page selection initialization.
 
   // Read the initial state of CLK
@@ -196,7 +198,7 @@ void loop()
  
  if( menuSet == 1)
  {
-  if( count >= 0 && count <= 2)
+  if( count >= 0 && count <= 5)
     { 
       if(flag1 == 1)
       {
@@ -206,13 +208,15 @@ void loop()
 
       //Response from the encoder
       update();
+      delay(5);
       push();
-      delay(10);
+      delay(5);
       
       lcd.setCursor(0, 0);
       lcd.write(byte(0)); 
       lcd.setCursor(1,0);
       lcd.print("Info Screen");
+      
       lcd.setCursor(1 ,1);
       lcd.print("Start Winding"); 
       lcd.setCursor(1,2);
@@ -225,7 +229,7 @@ void loop()
       submenu = 1;
       menu = 2;
     }
-   else if(count >2 && count < 4)
+   else if(count >5 && count <= 10)
     {
       if(flag2 == 1)
       {
@@ -235,15 +239,18 @@ void loop()
 
       //Response from the encoder
       update();
+      delay(5);
       push();
       delay(10);
       
       lcd.setCursor(1,0);
       lcd.print("Info Screen");
+      
       lcd.setCursor(0, 1);
       lcd.write(byte(0)); 
       lcd.setCursor(1 ,1);
       lcd.print("Start Winding"); 
+      
       lcd.setCursor(1,2);
       lcd.print("Speed");
       lcd.setCursor(1 ,3);
@@ -254,7 +261,7 @@ void loop()
       submenu = 2;
       menu = 2;
     }
-   else if(count >4 && count < 6)
+   else if(count >10 && count <= 15)
    { 
      if(flag3 == 1)
      {
@@ -264,6 +271,7 @@ void loop()
 
      //Response from the encoder
      update();
+     delay(5);
      push();
      delay(10);
      
@@ -271,10 +279,12 @@ void loop()
      lcd.print("Info Screen");
      lcd.setCursor(1 ,1);
      lcd.print("Start Winding"); 
-     lcd.setCursor(1,2);
-     lcd.setCursor(0, 3);
-     lcd.write(byte(0)); 
+     
+     lcd.setCursor(0, 2);
+     lcd.write(byte(0));
+     lcd.setCursor(1,2); 
      lcd.print("Speed");
+     
      lcd.setCursor(1 ,3);
      lcd.print("Home Ferrari");
 
@@ -284,7 +294,7 @@ void loop()
      submenu = 3;
      menu = 2;
    }
-   else if(count >4 && count < 6)
+   else if(count >15 && count <= 20)
    { 
      if(flag4 == 1)
      {
@@ -293,6 +303,7 @@ void loop()
      }
      //Response from the encoder
      update();
+     delay(5);
      push();
      delay(10);
      
@@ -301,9 +312,10 @@ void loop()
      lcd.setCursor(1 ,1);
      lcd.print("Start Winding"); 
      lcd.setCursor(1,2);
+     lcd.print("Speed");
+     
      lcd.setCursor(0, 3);
      lcd.write(byte(0)); 
-     lcd.print("Speed");
      lcd.setCursor(1 ,3);
      lcd.print("Home Ferrari");
 
@@ -313,7 +325,15 @@ void loop()
      submenu = 4;
      menu = 2;
    }
-   
+   else if(count > 20)
+   { 
+     count = 0 ;
+   }
+   else if (count < 0 )
+   {
+     count = 0;
+   }
+
    flag5 = 1;
  }
 
@@ -330,6 +350,7 @@ void loop()
       }
       //Response from the encoder
       update();
+      delay(5);
       push();
       delay(10);
       
@@ -361,6 +382,7 @@ void loop()
       lcd.setCursor(14, 1);
       //Response from the encoder
       push();
+      delay(5);
       update();
       delay(10);
       
@@ -392,6 +414,7 @@ void loop()
 
       //Response from the encoder
       push();
+      delay(5);
       update();
       delay(10);
    
@@ -420,6 +443,7 @@ void loop()
 
       //Response from the encoder
       push();
+      delay(5);
       update();
       delay(10);
       
@@ -471,6 +495,7 @@ void loop()
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
       push();
+      delay(5);
       update();
       delay(10);
       
@@ -509,6 +534,7 @@ void loop()
 
         //Response from the encoder
         push();
+        delay(5);
         update();
         delay(10);
         
@@ -533,6 +559,7 @@ void loop()
 
       //Response from the encoder
        push();
+       delay(5);
        update();
        delay(10);
          
