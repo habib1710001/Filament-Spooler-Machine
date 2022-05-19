@@ -27,6 +27,10 @@ AccelStepper Stepper3(MOTOR_INTERFACE_TIME , STEPPER3STEP, STEPPER3DIR);
 #define ENCODERBCLK   31     // Rotary encoder Pin B/CLK
 #define ENCODERADT    33     // Rotary encoder Pin A/DT
 
+int count = 0;
+int currentStateCLK;
+int lastStateCLK;
+
 
 #define LCDRS 16
 #define LCDEN 17
@@ -44,8 +48,8 @@ LiquidCrystal lcd(LCDRS, LCDEN, LCDD4, LCDD5, LCDD6, LCDD7);
 // Rotary Encoder Variables
 volatile uint8_t switchPin = 2;       // button pin
 volatile uint8_t switchState = HIGH; // button value
-volatile uint8_t pinAstateCurrent ;                // Current state of Pin A
-volatile uint8_t pinAStateLast;      // Last read value of Pin A
+int pinAstateCurrent ;                // Current state of Pin A
+int pinAStateLast;      // Last read value of Pin A
 
 //Menu and submenue variables
 volatile uint8_t  subMenuSet;
@@ -62,7 +66,9 @@ uint32_t initial_homing = 1;
 uint32_t stepper2PositionLeft;
 uint32_t stepper2PositionRight;
 uint32_t lastButtonPress = 0 ;
-bool flipState = true;
+boolean flipState = true;
+boolean breakLoop;
+boolean breakState =0;
 
 //For showing the menu properly:
 uint8_t flag1 = 1 ;
@@ -71,13 +77,14 @@ uint8_t flag3 = 1 ;
 uint8_t flag4 = 1;
 uint8_t flag5 = 1;
 uint8_t flag6 = 1;
+uint16_t pullerSpeed;
 
 uint32_t debouncing_time = 100;//Debouncing Time in Milliseconds
 volatile uint32_t last_micros;
 
 
 //For counting the rotaion of rotary encoder:
-volatile uint16_t count = 0;
+//volatile  int16_t count ;
 
 
 //Vectors for musical note, arrow, speaker , battery level
@@ -93,40 +100,45 @@ void push()
   if (btnState == LOW){
     //if 50ms have passed since last LOW pulse, it means that the
     //button has been pressed, released and pressed again
-    if (millis() - lastButtonPress > 50){
+    if (millis() - lastButtonPress > 100){
       Serial.println("Button pressed!"); //for debugging only
+      Serial.println(submenu); //for debugging only
+      Serial.println(menu); //for debugging only
+      Serial.println(optmenu); //for debugging only
       count = 0; 
       subMenuSet = submenu;
       menuSet = menu;
       optMenuSet = optmenu;
     }
     // Remember last button press event
+    lcd.clear();
+    delay(500);
     lastButtonPress = millis();
+    breakLoop = breakState;
   }
 }
 
 void update() {
   // ROTATION DIRECTION
-  pinAstateCurrent = digitalRead(ENCODERADT);    // Read the current state of Pin A
+  pinAstateCurrent = digitalRead(ENCODERBCLK);    // Read the current state of Pin A
   
   // If there is a minimal movement of 1 step
-  if ((pinAStateLast == LOW) && (pinAstateCurrent == HIGH)) 
+  if (pinAstateCurrent != pinAStateLast  && pinAstateCurrent == 1)
   {
-    if (digitalRead(ENCODERBCLK) == LOW) 
+    if (digitalRead(ENCODERADT) != pinAstateCurrent) 
      {
-      count++;
+      count = count - 1;
      } 
     else 
      {
-      count--;
+      count = count + 1;
      }  
   }
-  Serial.println(count);
   pinAStateLast = pinAstateCurrent;        // Store the latest read value in the currect state variable
 }
 
 void flipCheck()
-{    //Serial.println(currentPosition()); //for debugging
+{    Serial.println(Stepper2.currentPosition()); //for debugging
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
         Stepper2.setSpeed(500);   //positive direction 500 steps per sec     
      }
@@ -149,11 +161,14 @@ void setup()
   Serial.begin (9600); // Initialise the serial monitor
   
   // Initialize the LCD
-  lcd.begin(LCDCOLUMN, LCDROW);
+   lcd.begin(LCDCOLUMN, LCDROW);
+
+  // Print a message to the LCD.
+  lcd.setCursor(3,0);
   
   // Turn on the blacklight and print a message.
   lcd.clear();
-  lcd.print("Spooler Machine");
+  lcd.print("   Spooler Machine");
   delay(2000);
   lcd.clear();
 
@@ -168,9 +183,9 @@ void setup()
   
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
-  digitalWrite(ENCODERADT, HIGH);                 // turn on pullup resistors
+ // digitalWrite(ENCODERADT, HIGH);                 // turn on pullup resistors
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
-  digitalWrite(ENCODERBCLK, HIGH);                // turn on pullup resistors
+  //digitalWrite(ENCODERBCLK, HIGH);                // turn on pullup resistors
   
   pinMode (LIMITSWITCH2 , INPUT);
 
@@ -188,18 +203,20 @@ void setup()
 
   menuSet = 1; //default page selection initialization.
 
-  // Read the initial state of CLK
+  // Read the initial state
   pinAStateLast = digitalRead(ENCODERBCLK);
+
 }
 
 void loop() 
 { 
  //MAIN MENU
- 
  if( menuSet == 1)
  {
-  if( count >= 0 && count <= 5)
+  Serial.println("Start Main Manu");
+  if( count >= 0 && count < 1)
     { 
+      Serial.println("Info Screen");
       if(flag1 == 1)
       {
         flag1 = 0;
@@ -207,10 +224,8 @@ void loop()
       }
 
       //Response from the encoder
-      update();
-      delay(5);
       push();
-      delay(5);
+      update();
       
       lcd.setCursor(0, 0);
       lcd.write(byte(0)); 
@@ -229,8 +244,9 @@ void loop()
       submenu = 1;
       menu = 2;
     }
-   else if(count >5 && count <= 10)
-    {
+   else if(count >= 1 && count < 2)
+    { 
+      Serial.println("Start Winding");
       if(flag2 == 1)
       {
         flag2 = 0;
@@ -239,9 +255,7 @@ void loop()
 
       //Response from the encoder
       update();
-      delay(5);
       push();
-      delay(10);
       
       lcd.setCursor(1,0);
       lcd.print("Info Screen");
@@ -261,8 +275,9 @@ void loop()
       submenu = 2;
       menu = 2;
     }
-   else if(count >10 && count <= 15)
+   else if(count >= 2 && count < 3)
    { 
+     Serial.println("Speed");
      if(flag3 == 1)
      {
         flag3 = 0;
@@ -271,9 +286,7 @@ void loop()
 
      //Response from the encoder
      update();
-     delay(5);
      push();
-     delay(10);
      
      lcd.setCursor(1,0);
      lcd.print("Info Screen");
@@ -294,8 +307,9 @@ void loop()
      submenu = 3;
      menu = 2;
    }
-   else if(count >15 && count <= 20)
+   else if(count >= 3 && count < 4)
    { 
+     Serial.println("Home Ferrari");
      if(flag4 == 1)
      {
         flag4 = 0;
@@ -303,9 +317,7 @@ void loop()
      }
      //Response from the encoder
      update();
-     delay(5);
      push();
-     delay(10);
      
      lcd.setCursor(1,0);
      lcd.print("Info Screen");
@@ -325,127 +337,121 @@ void loop()
      submenu = 4;
      menu = 2;
    }
-   else if(count > 20)
+   else if(count >= 4)
    { 
      count = 0 ;
    }
    else if (count < 0 )
    {
-     count = 0;
+     count = 0 ;
    }
-
-   flag5 = 1;
+  Serial.println("END MAIN MENU");
+  flag5 = 1;
  }
 
-  //SUB MENU
+ //SUB MENU
   if( menuSet == 2)
-  {
+  { 
+    Serial.println("Start Sub MENU");
     if( subMenuSet == 1)
      {
-      if( flag5 == 1)
-      {
-       lcd.clear();
-       flag5 = 0 ;
-       menu = 1 ; 
+      if( flag5 == 1){
+        lcd.clear();
+        flag5 = 0;
       }
+      Serial.println("Sub MENU 1");
+
+      menu = 1;
       //Response from the encoder
       update();
-      delay(5);
       push();
-      delay(10);
       
       lcd.setCursor(0, 0);
       lcd.print("Filament Spooler");
       lcd.setCursor(5, 1);
       lcd.print("Machine V1");
-
-      flag2 = 1;
-      flag3 = 1;
-      flag4 = 1;
-      optmenu = 0;
-      menu = 1; 
      }
+     
     if( subMenuSet == 2)
     { 
-      if( flag4 == 1)
-      {
-       lcd.clear();
-       flag4 = 0 ;
-       menu = 3; 
+      if(flag5 == 1){
+        lcd.clear();
+        flag5 = 0;
       }
+      Serial.println("Sub MENU 2");
+
       lcd.setCursor(0, 0);
       lcd.print("Adjust Puller Speed?");
       
       lcd.setCursor(0, 1);
-      lcd.print("Puller Speed");
+      lcd.print("Puller Speed:");
 
       lcd.setCursor(14, 1);
-      //Response from the encoder
-      push();
-      delay(5);
-      update();
-      delay(10);
-      
-      uint8_t value = map(count, 0, 500, 0, 1000);
-      lcd.print(String(value) + "rpm");
-      
-      Stepper1.setSpeed(value);
-      Stepper2.setSpeed(value);
-      lcd.setCursor(0 ,3);
-      lcd.print("Start Spolling?");
 
-      flag2 = 1;
-      flag3 = 1;
-      flag5 = 1;
       optmenu = 2;
       menu = 3;
+      
+      //Response from the encoder
+      push();
+      update();
+
+      lcd.setCursor(6 , 2);
+      pullerSpeed = map( count, 0, 500 , 0, 1000);
+
+       //speed  limit (changable)
+       if( pullerSpeed  > 2000){
+           pullerSpeed  = 0;
+        }
+      lcd.print(String(pullerSpeed) + "rpm    ");
+      
+      
+      Stepper1.setSpeed(pullerSpeed);
+      Stepper2.setSpeed(pullerSpeed);
+      lcd.setCursor(3 ,3);
+      lcd.print("Start Spolling?");
     }
     if( subMenuSet == 3)
     { 
-     if( flag2 == 1)
-     {
-       lcd.clear();
-       flag2 = 0 ;
-       menu = 3; 
-     }
-     
-      lcd.setCursor(0, 0);
-      lcd.print("Speed: ");
+      if(flag5 == 1){
+        lcd.clear();
+        flag5 = 0;
+      }
+     Serial.println("Sub MENU 3");
 
+     lcd.setCursor(0, 0);
+     lcd.print("Speed: ");
+
+      menu = 1;
       //Response from the encoder
       push();
-      delay(5);
       update();
-      delay(10);
    
-      uint8_t value = map(count, 0, 500, 0, 1000);
+      uint16_t value = map(count, 0, 500, 0, 1000);
+       if(value > 2000){
+           value  = 0;
+        }
       Stepper1.setSpeed(value);
       Stepper2.setSpeed(value);
-      lcd.print(String(value) + "rpm");
+      lcd.print(String(value) + "rpm   ");
 
       lcd.setCursor(0, 1);
       lcd.print("Set Speed?");
 
-      flag3 = 1;
-      flag5 = 1;
-      flag4 = 1;
-      optmenu = 0;
-      menu = 3;
     }
     if( subMenuSet == 4)
     { 
-     if( flag3 == 1)
-     {
-       lcd.clear();
-       flag3 = 0 ;
-       menu = 3; 
-     }
+     Serial.println("Sub MENU 4");
+
+      if(flag5 == 1){
+        lcd.clear();
+        flag5 = 0;
+      }
+      optmenu = 4;
+      menu = 3;
 
       //Response from the encoder
       push();
-      delay(5);
       update();
-      delay(10);
       
       lcd.setCursor(0, 0);
       lcd.print("Setting Ferrari");
@@ -453,7 +459,7 @@ void loop()
       lcd.print("on Home Position");
 
       //if limit switch is not activated,run the loop
-      //Serial.println(digitalRead(LIMITSWITCH2));//check the limit switch is activve low or high
+      Serial.println(digitalRead(LIMITSWITCH2));//check the limit switch is activve low or high
       while(digitalRead(LIMITSWITCH2)){
         Stepper2.moveTo(initial_homing);
         Stepper2.run();
@@ -464,16 +470,13 @@ void loop()
       Stepper2.setCurrentPosition(0);
       Stepper2.setMaxSpeed(100);
       Stepper2.setAcceleration(100);
-      
-      flag2 = 1;
-      flag5 = 1;
-      flag4 = 1;
+
       optmenu = 4;
       menu = 3;
     }
+   Serial.println("end sub menu");
    flag6 = 1;
   }
-
   
   // operation menu
   if( menuSet == 3){
@@ -484,100 +487,96 @@ void loop()
        lcd.clear();
        flag6 = 0 ;
        menu = 1 ;
-       
       }
+      
       lcd.setCursor(0, 0);
-      lcd.print("Spool and Ferrari");
-      lcd.setCursor(9, 1);
-      lcd.print("On");
+      lcd.print("Spool and Ferrari On");
+
+      menu = 1;
       
       //Stepper motor rotaion code
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
       push();
-      delay(5);
       update();
-      delay(10);
       
       Stepper1.runSpeed();
       Stepper3.run();
       Stepper2.runSpeed();
       flipCheck();   //checking the flip in each loop
-      
-
-      flag3 = 1;
-      flag4 = 1;
-      flag5 = 1;
-      menu = 1;
      }
+     
     if( optMenuSet == 4)
     { 
-      if( flag5 == 1)
+      if( flag6 == 1)
       {
        lcd.clear();
-       flag5 = 0 ;
+       flag6 = 0 ;
        menu = 3 ; 
-       optmenu = 3;
+       optmenu = 4;
        
        while(1)
        {
-        lcd.setCursor(4, 0);
-        lcd.print("Set Ferari on");
+        Serial.println(flag6);
+        lcd.setCursor(0, 0);
+        lcd.print("Set Ferari on..");
         
-        lcd.setCursor(4, 1);
-        lcd.print("Left Spool side");
+        lcd.setCursor(0, 1);
+        lcd.print("Left Spool side..");
 
-        lcd.setCursor(4, 2);
+        lcd.setCursor(0, 2);
         lcd.print("Left Position: ");
         
-        lcd.setCursor(17, 2);
+        lcd.setCursor(15, 2);
 
+        
+        breakState = 1;
+        if(breakLoop == 1){
+          break;
+        }
         //Response from the encoder
         push();
-        delay(5);
         update();
-        delay(10);
-        
+
         //move the stepper motor 2 towards the left Spool side with this code
         stepper2PositionLeft = count;
         Stepper2.moveTo(stepper2PositionLeft);
         Stepper2.runToNewPosition(stepper2PositionLeft);
-        //
+        //position limit, changable
+        if( stepper2PositionLeft > 2000){
+           stepper2PositionLeft = 0;
+        }
         lcd.print(String(stepper2PositionLeft));
        }
       }
-      lcd.setCursor(4, 0);
-      lcd.print("Set Ferari on");
+      lcd.setCursor(0, 0);
+      lcd.print("Set Ferari on..");
 
-      lcd.setCursor(4, 1);
-      lcd.print("Right Spool side");
+      lcd.setCursor(0, 1);
+      lcd.print("Right Spool side..");
 
-      lcd.setCursor(4, 2);
+      lcd.setCursor(0, 2);
       lcd.print("Right Position: ");
 
-      lcd.setCursor(17, 2);
+      lcd.setCursor(15, 2);
 
+      menu = 1;
       //Response from the encoder
        push();
-       delay(5);
        update();
-       delay(10);
          
       //move the stepper motor 2 towards the Right Spool side with this code
-        stepper2PositionRight = count;
-        Stepper2.moveTo(stepper2PositionRight);
-        Stepper2.runToNewPosition(stepper2PositionRight);
-      //
-        
+       stepper2PositionRight = count;
+       Stepper2.moveTo(stepper2PositionRight);
+       Stepper2.runToNewPosition(stepper2PositionRight);
+      //position limit, changable
+      if( stepper2PositionRight > 2000){
+        stepper2PositionRight = 0;
+      }
       lcd.print(String(stepper2PositionRight));
       
       lcd.setCursor(0 ,3);
       lcd.print("Click to finish");
-
-      flag3 = 1;
-      flag4 = 1;
-      flag6 = 1;
-      menu = 1;
     }
-  }
+}
 }
