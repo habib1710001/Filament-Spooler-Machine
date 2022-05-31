@@ -183,9 +183,9 @@ void setup()
   
   pinMode (ENCODERSW, INPUT_PULLUP);              // Enable the switchPin as input with a PULLUP resistor
   pinMode (ENCODERADT, INPUT);                    // Set PinA as input
- // digitalWrite(ENCODERADT, HIGH);                 // turn on pullup resistors
+  digitalWrite(ENCODERADT, HIGH);                 // turn on pullup resistors
   pinMode (ENCODERBCLK, INPUT);                   // Set PinB as input
-  //digitalWrite(ENCODERBCLK, HIGH);                // turn on pullup resistors
+  digitalWrite(ENCODERBCLK, HIGH);                // turn on pullup resistors
   
   pinMode (LIMITSWITCH2 , INPUT);
 
@@ -200,6 +200,19 @@ void setup()
   Stepper3.setMaxSpeed(100);
   Stepper3.setAcceleration(50);
   Stepper3.setSpeed(200);
+
+  Stepper1.setEnablePin(STEPPER1EN);
+  Stepper1.setPinsInverted(false, false, true); //invert logic of enable pin
+  Stepper1.enableOutputs();
+
+  Stepper2.setEnablePin(STEPPER2EN);
+  Stepper2.setPinsInverted(false, false, true); //invert logic of enable pin
+  Stepper2.enableOutputs();
+
+  Stepper3.setEnablePin(STEPPER3EN);
+  Stepper3.setPinsInverted(false, false, true); //invert logic of enable pin
+  Stepper3.enableOutputs();
+  
 
   menuSet = 1; //default page selection initialization.
 
