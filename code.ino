@@ -192,15 +192,15 @@ void setup()
 
   //Change the speed, according to your requirements
   Stepper1.setMaxSpeed(1000);
-  Stepper1.setAcceleration(50);
+  Stepper1.setAcceleration(1000);
   Stepper1.setSpeed(500);
 
   Stepper2.setMaxSpeed(1000);
-  Stepper2.setAcceleration(50);
-  Stepper2.setSpeed(200);
+  Stepper2.setAcceleration(1000);
+  Stepper2.setSpeed(500);
 
   Stepper3.setMaxSpeed(1000);
-  Stepper3.setAcceleration(50);
+  Stepper3.setAcceleration(1000);
   Stepper3.setSpeed(500);
 
   Stepper1.setEnablePin(STEPPER1EN);
