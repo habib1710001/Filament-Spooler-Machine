@@ -191,17 +191,17 @@ void setup()
   pinMode (LIMITSWITCH2 , INPUT);
 
   //Change the speed, according to your requirements
-  Stepper1.setMaxSpeed(100);
-  Stepper1.setAcceleration(100);
-  Stepper1.setSpeed(200);
+  Stepper1.setMaxSpeed(1000);
+  Stepper1.setAcceleration(50);
+  Stepper1.setSpeed(500);
 
-  Stepper2.setMaxSpeed(100);
+  Stepper2.setMaxSpeed(1000);
   Stepper2.setAcceleration(50);
   Stepper2.setSpeed(200);
 
-  Stepper3.setMaxSpeed(100);
+  Stepper3.setMaxSpeed(1000);
   Stepper3.setAcceleration(50);
-  Stepper3.setSpeed(200);
+  Stepper3.setSpeed(500);
 
   Stepper1.setEnablePin(STEPPER1EN);
   Stepper1.setPinsInverted(false, false, true); //invert logic of enable pin
@@ -493,7 +493,7 @@ void loop()
       Stepper2.setCurrentPosition(0);
 
       //you may change the acceleration and speed according to your requirements.
-      Stepper2.setMaxSpeed(100);
+      Stepper2.setMaxSpeed(1000);
       Stepper2.setAcceleration(100);
 
       optmenu = 4;
