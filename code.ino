@@ -138,7 +138,8 @@ void update() {
 }
 
 void flipCheck()
-{    Serial.println(Stepper2.currentPosition()); //for debugging
+{    
+     Serial.println(Stepper2.currentPosition()); //for debugging
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
         Stepper2.setSpeed(500);   //positive direction 500 steps per sec     
      }
@@ -161,7 +162,7 @@ void setup()
   Serial.begin (9600); // Initialise the serial monitor
   
   // Initialize the LCD
-   lcd.begin(LCDCOLUMN, LCDROW);
+  lcd.begin(LCDCOLUMN, LCDROW);
 
   // Print a message to the LCD.
   lcd.setCursor(3,0);
@@ -189,6 +190,7 @@ void setup()
   
   pinMode (LIMITSWITCH2 , INPUT);
 
+  //Change the speed, according to your requirements
   Stepper1.setMaxSpeed(100);
   Stepper1.setAcceleration(100);
   Stepper1.setSpeed(200);
@@ -471,7 +473,15 @@ void loop()
       lcd.setCursor(2, 1);
       lcd.print("on Home Position");
 
+      /** 
+       *  please see the serial monitor if this portion of code doesn't work,  
+       *  if normal state: 1, then when the limitswitch will be triggered that will show 0.
+       *  if normal state: 0, then 
+       *  change the  line //  while(digitalRead(LIMITSWITCH2)){
+       *  to this line     //  while(!digitalRead(LIMITSWITCH2)){
+      **/
       //if limit switch is not activated,run the loop
+      Serial.println("Normal State: ");//check the limit switch is activve low or high
       Serial.println(digitalRead(LIMITSWITCH2));//check the limit switch is activve low or high
       while(digitalRead(LIMITSWITCH2)){
         Stepper2.moveTo(initial_homing);
@@ -481,6 +491,8 @@ void loop()
       }
       
       Stepper2.setCurrentPosition(0);
+
+      //you may change the acceleration and speed according to your requirements.
       Stepper2.setMaxSpeed(100);
       Stepper2.setAcceleration(100);
 
@@ -506,16 +518,18 @@ void loop()
       lcd.print("Spool and Ferrari On");
 
       menu = 1;
+
+      push();
+      update();
       
       //Stepper motor rotaion code
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
-      push();
-      update();
       
       Stepper1.runSpeed();
       Stepper3.run();
       Stepper2.runSpeed();
+      
       flipCheck();   //checking the flip in each loop
      }
      
@@ -551,7 +565,7 @@ void loop()
         push();
         update();
 
-        //move the stepper motor 2 towards the left Spool side with this code
+      //move the stepper motor 2 towards the left Spool side with this code
         stepper2PositionLeft = count;
         Stepper2.moveTo(stepper2PositionLeft);
         Stepper2.runToNewPosition(stepper2PositionLeft);
