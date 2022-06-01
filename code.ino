@@ -142,7 +142,7 @@ void flipCheck()
 {    
      Serial.println(Stepper2.currentPosition()); //for debugging
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
-        Stepper2.setSpeed(1000);   //positive direction 500 steps per sec     
+        Stepper2.setSpeed(3000);   //positive direction 500 steps per sec     
      }
      else {
       flipState =! flipState;
@@ -150,7 +150,7 @@ void flipCheck()
      
      if((flipState == false) && (Stepper2.currentPosition() > stepper2PositionLeft)) 
      {  
-       Stepper2.setSpeed(-1000);   //negative direction 500 steps per sec
+       Stepper2.setSpeed(-3000);   //negative direction 500 steps per sec
      } 
      else {
       flipState =! flipState;
@@ -192,17 +192,17 @@ void setup()
   pinMode (LIMITSWITCH2 , INPUT);
 
   //Change the speed, according to your requirements
-  Stepper1.setMaxSpeed(1000);     //steps per second
+  Stepper1.setMaxSpeed(4000);     //steps per second
   Stepper1.setAcceleration(1000); //steps per second per sesond
-  Stepper1.setSpeed(1000);        //steps per second
+  Stepper1.setSpeed(4000);        //steps per second
 
   Stepper2.setMaxSpeed(1000);      //steps per second
   Stepper2.setAcceleration(1000);  //steps per second per sesond
-  Stepper2.setSpeed(1000);         //steps per second
+  Stepper2.setSpeed(4000);         //steps per second
 
-  Stepper3.setMaxSpeed(1000);        //steps per second
+  Stepper3.setMaxSpeed(4000);        //steps per second
   Stepper3.setAcceleration(1000);    //steps per second per sesond
-  Stepper3.setSpeed(1000);           //steps per second
+  Stepper3.setSpeed(4000);           //steps per second
 
   Stepper1.setEnablePin(STEPPER1EN);  
   Stepper1.setPinsInverted(false, false, true); //invert logic of enable pin
@@ -412,10 +412,10 @@ void loop()
       update();
 
       lcd.setCursor(6 , 2);
-      pullerSpeed = map( count, 0, 100 , 0, 1000); // steps per second
+      pullerSpeed = map( count, 0, 100 , 0, 4000); // steps per second
 
        //speed  limit (changable)
-       if( pullerSpeed  > 2000){
+       if( pullerSpeed  > 4000){
            pullerSpeed  = 0;
         }
       lcd.print(String(pullerSpeed) + "sps    ");
@@ -443,8 +443,8 @@ void loop()
       push();
       update();
    
-      uint16_t value = map(count, 0, 50 , 0, 1000);////steps per second
-       if(value > 2000){
+      uint16_t value = map(count, 0, 100 , 0, 4000);////steps per second
+       if(value > 4000){
            value  = 0;
         }
       Stepper1.setSpeed(value);
@@ -496,8 +496,8 @@ void loop()
       Stepper2.setCurrentPosition(0);
 
       //you may change the acceleration and speed according to your requirements.
-      Stepper2.setMaxSpeed(1000);
-      Stepper2.setAcceleration(100);
+      Stepper2.setMaxSpeed(4000);
+      Stepper2.setAcceleration(1000);
 
       optmenu = 4;
       menu = 3;
