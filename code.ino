@@ -191,19 +191,19 @@ void setup()
   pinMode (LIMITSWITCH2 , INPUT);
 
   //Change the speed, according to your requirements
-  Stepper1.setMaxSpeed(1000);
-  Stepper1.setAcceleration(1000);
-  Stepper1.setSpeed(500);
+  Stepper1.setMaxSpeed(1000);     //steps per second
+  Stepper1.setAcceleration(1000); //steps per second per sesond
+  Stepper1.setSpeed(1000);        //steps per second
 
-  Stepper2.setMaxSpeed(1000);
-  Stepper2.setAcceleration(1000);
-  Stepper2.setSpeed(500);
+  Stepper2.setMaxSpeed(1000);      //steps per second
+  Stepper2.setAcceleration(1000);  //steps per second per sesond
+  Stepper2.setSpeed(1000);         //steps per second
 
-  Stepper3.setMaxSpeed(1000);
-  Stepper3.setAcceleration(1000);
-  Stepper3.setSpeed(500);
+  Stepper3.setMaxSpeed(1000);        //steps per second
+  Stepper3.setAcceleration(1000);    //steps per second per sesond
+  Stepper3.setSpeed(1000);           //steps per second
 
-  Stepper1.setEnablePin(STEPPER1EN);
+  Stepper1.setEnablePin(STEPPER1EN);  
   Stepper1.setPinsInverted(false, false, true); //invert logic of enable pin
   Stepper1.enableOutputs();
 
@@ -411,17 +411,18 @@ void loop()
       update();
 
       lcd.setCursor(6 , 2);
-      pullerSpeed = map( count, 0, 500 , 0, 1000);
+      pullerSpeed = map( count, 0, 100 , 0, 1000); // steps per second
 
        //speed  limit (changable)
        if( pullerSpeed  > 2000){
            pullerSpeed  = 0;
         }
-      lcd.print(String(pullerSpeed) + "rpm    ");
+      lcd.print(String(pullerSpeed) + "sps    ");
       
       
       Stepper1.setSpeed(pullerSpeed);
-      Stepper2.setSpeed(pullerSpeed);
+      Stepper3.setSpeed(pullerSpeed);
+      
       lcd.setCursor(3 ,3);
       lcd.print("Start Spolling?");
     }
@@ -441,13 +442,14 @@ void loop()
       push();
       update();
    
-      uint16_t value = map(count, 0, 500, 0, 1000);
+      uint16_t value = map(count, 0, 50 , 0, 1000);////steps per second
        if(value > 2000){
            value  = 0;
         }
       Stepper1.setSpeed(value);
-      Stepper2.setSpeed(value);
-      lcd.print(String(value) + "rpm   ");
+      Stepper3.setSpeed(value);
+      
+      lcd.print(String(value) + "sps   ");
 
       lcd.setCursor(0, 1);
       lcd.print("Set Speed?");
@@ -526,9 +528,9 @@ void loop()
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
       
-      Stepper1.runSpeed();
+      Stepper1.run();
       Stepper3.run();
-      Stepper2.runSpeed();
+      Stepper2.run();
       
       flipCheck();   //checking the flip in each loop
      }
@@ -566,7 +568,7 @@ void loop()
         update();
 
       //move the stepper motor 2 towards the left Spool side with this code
-        stepper2PositionLeft = count;
+        stepper2PositionLeft = map(count, 0, 50 , 0, 1000);
         Stepper2.moveTo(stepper2PositionLeft);
         Stepper2.runToNewPosition(stepper2PositionLeft);
         //position limit, changable
@@ -593,7 +595,7 @@ void loop()
        update();
          
       //move the stepper motor 2 towards the Right Spool side with this code
-       stepper2PositionRight = count;
+       stepper2PositionRight = map(count, 0, 50 , 0, 1000);
        Stepper2.moveTo(stepper2PositionRight);
        Stepper2.runToNewPosition(stepper2PositionRight);
       //position limit, changable
