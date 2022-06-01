@@ -63,6 +63,7 @@ volatile uint8_t  menu;
 uint8_t rightPosition;
 uint8_t leftPosition;
 uint32_t initial_homing = 1;
+uint32_t position_123 = 1;
 uint32_t stepper2PositionLeft;
 uint32_t stepper2PositionRight;
 uint32_t lastButtonPress = 0 ;
@@ -141,7 +142,7 @@ void flipCheck()
 {    
      Serial.println(Stepper2.currentPosition()); //for debugging
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
-        Stepper2.setSpeed(500);   //positive direction 500 steps per sec     
+        Stepper2.setSpeed(1000);   //positive direction 500 steps per sec     
      }
      else {
       flipState =! flipState;
@@ -149,7 +150,7 @@ void flipCheck()
      
      if((flipState == false) && (Stepper2.currentPosition() > stepper2PositionLeft)) 
      {  
-       Stepper2.setSpeed(-500);   //negative direction 500 steps per sec
+       Stepper2.setSpeed(-1000);   //negative direction 500 steps per sec
      } 
      else {
       flipState =! flipState;
@@ -527,10 +528,16 @@ void loop()
       //Stepper motor rotaion code
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
-      
+      position_123++;
+       
       Stepper1.run();
+      Stepper1.moveTo(position_123);
+      
       Stepper3.run();
+      Stepper3.moveTo(position_123);
+      
       Stepper2.run();
+      Stepper2.moveTo(position_123);
       
       flipCheck();   //checking the flip in each loop
      }
