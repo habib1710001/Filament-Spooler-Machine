@@ -140,20 +140,37 @@ void update() {
 
 void flipCheck()
 {    
-     Serial.println(Stepper2.currentPosition()); //for debugging
+    //Serial.println(Stepper2.currentPosition()); //for debugging
+     
      if((flipState == true) && (Stepper2.currentPosition() < stepper2PositionRight)){    
-        Stepper2.setSpeed(3000);   //positive direction 500 steps per sec     
+        Stepper2.setSpeed(3000.0);   //positive direction 3000 steps per sec
+
+        //no direction change required for stepper1 and stepper3
+        Stepper1.move(1000);       //Set the target position relative to the current position
+        Stepper3.move(1000);       //Set the target position relative to the current position
+        Stepper1.setSpeed(4000.0);   //positive direction 3000 steps per sec
+        Stepper3.setSpeed(4000.0);   //positive direction 3000 steps per sec
      }
      else {
       flipState =! flipState;
+      Stepper2.moveTo(stepper2PositionLeft);
+      Stepper2.setSpeed(-3000);   //negative direction 3000 steps per sec
      }
      
      if((flipState == false) && (Stepper2.currentPosition() > stepper2PositionLeft)) 
      {  
-       Stepper2.setSpeed(-3000);   //negative direction 500 steps per sec
+       Stepper2.setSpeed(-3000);   //negative direction 3000 steps per sec
+
+       //no direction change required for stepper1 and stepper3
+       Stepper1.move(1000);       //Set the target position relative to the current position
+       Stepper3.move(1000);       //Set the target position relative to the current position
+       Stepper1.setSpeed(4000.0);   //positive direction 3000 steps per sec
+       Stepper3.setSpeed(4000.0);   //positive direction 3000 steps per sec
      } 
      else {
       flipState =! flipState;
+      Stepper2.moveTo(stepper2PositionRight);
+      Stepper2.setSpeed(3000);   //negative direction 3000 steps per sec
      }   
 }
 
@@ -192,17 +209,17 @@ void setup()
   pinMode (LIMITSWITCH2 , INPUT);
 
   //Change the speed, according to your requirements
-  Stepper1.setMaxSpeed(4000);     //steps per second
-  Stepper1.setAcceleration(1000); //steps per second per sesond
-  Stepper1.setSpeed(4000);        //steps per second
+  Stepper1.setMaxSpeed(4000.0);     //steps per second
+  Stepper1.setAcceleration(1000.0); //steps per second per sesond
+  Stepper1.setSpeed(4000.0);        //steps per second
 
-  Stepper2.setMaxSpeed(1000);      //steps per second
-  Stepper2.setAcceleration(1000);  //steps per second per sesond
-  Stepper2.setSpeed(4000);         //steps per second
+  Stepper2.setMaxSpeed(4000.0);      //steps per second
+  Stepper2.setAcceleration(1000.0);  //steps per second per sesond
+  Stepper2.setSpeed(4000.0);         //steps per second
 
-  Stepper3.setMaxSpeed(4000);        //steps per second
-  Stepper3.setAcceleration(1000);    //steps per second per sesond
-  Stepper3.setSpeed(4000);           //steps per second
+  Stepper3.setMaxSpeed(4000.0);        //steps per second
+  Stepper3.setAcceleration(1000.0);    //steps per second per sesond
+  Stepper3.setSpeed(4000.0);           //steps per second
 
   Stepper1.setEnablePin(STEPPER1EN);  
   Stepper1.setPinsInverted(false, false, true); //invert logic of enable pin
@@ -486,18 +503,20 @@ void loop()
       //if limit switch is not activated,run the loop
       Serial.println("Normal State: ");//check the limit switch is activve low or high
       Serial.println(digitalRead(LIMITSWITCH2));//check the limit switch is activve low or high
+      
+      initial_homing = 20000;
+      Stepper2.setSpeed(4000.0);//steps per second
+      Stepper2.setAcceleration(1000.0); //steps per second ^ 2
+      Stepper2.move(initial_homing);//Set the target position relative to the current position.
+      
       while(digitalRead(LIMITSWITCH2)){
-        Stepper2.moveTo(initial_homing);
-        Stepper2.run();
-        initial_homing++;
-        delay(5);
+        Stepper2.run();//Poll the motor and step it if a step is due
+        delay(1);
       }
       
       Stepper2.setCurrentPosition(0);
-
-      //you may change the acceleration and speed according to your requirements.
-      Stepper2.setMaxSpeed(4000);
-      Stepper2.setAcceleration(1000);
+      //you may change the speed according to your requirements.
+      Stepper2.setSpeed(4000.0);
 
       optmenu = 4;
       menu = 3;
@@ -524,22 +543,15 @@ void loop()
 
       push();
       update();
+
+      flipCheck();   //checking the flip in each loop
       
       //Stepper motor rotaion code
       //step the motor (this will step the motor by 1 step at each loop indefinitely)
       //Response from the encoder
-      position_123++;
-       
       Stepper1.run();
-      Stepper1.moveTo(position_123);
-      
-      Stepper3.run();
-      Stepper3.moveTo(position_123);
-      
       Stepper2.run();
-      Stepper2.moveTo(position_123);
-      
-      flipCheck();   //checking the flip in each loop
+      Stepper3.run(); 
      }
      
     if( optMenuSet == 4)
@@ -554,6 +566,7 @@ void loop()
        while(1)
        {
         Serial.println(flag6);
+        
         lcd.setCursor(0, 0);
         lcd.print("Set Ferari on..");
         
@@ -574,12 +587,13 @@ void loop()
         push();
         update();
 
-      //move the stepper motor 2 towards the left Spool side with this code
-        stepper2PositionLeft = map(count, 0, 50 , 0, 1000);
-        Stepper2.moveTo(stepper2PositionLeft);
-        Stepper2.runToNewPosition(stepper2PositionLeft);
+        //move the stepper motor 2 towards the left Spool side with this code
+        stepper2PositionLeft = map(count, 0, 100 , 0, 5000);
+        Stepper2.move(stepper2PositionLeft); //Set the target position relative to the current position.
+        Stepper2.runToNewPosition(stepper2PositionLeft); //Moves the motor (with acceleration/deceleration) to the new target position and blocks until it is at position
+        
         //position limit, changable
-        if( stepper2PositionLeft > 2000){
+        if( stepper2PositionLeft > 5000){
            stepper2PositionLeft = 0;
         }
         lcd.print(String(stepper2PositionLeft));
@@ -602,11 +616,11 @@ void loop()
        update();
          
       //move the stepper motor 2 towards the Right Spool side with this code
-       stepper2PositionRight = map(count, 0, 50 , 0, 1000);
-       Stepper2.moveTo(stepper2PositionRight);
+       stepper2PositionRight = map(count, 0, 100 , 0, 5000);
+       Stepper2.move(stepper2PositionRight);
        Stepper2.runToNewPosition(stepper2PositionRight);
       //position limit, changable
-      if( stepper2PositionRight > 2000){
+      if( stepper2PositionRight > 5000){
         stepper2PositionRight = 0;
       }
       lcd.print(String(stepper2PositionRight));
